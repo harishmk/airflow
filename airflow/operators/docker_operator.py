@@ -122,6 +122,8 @@ class DockerOperator(BaseOperator):
     :param tty: Allocate pseudo-TTY to the container
         This needs to be set see logs of the Docker container.
     :type tty: bool
+    :param pid_mode: Set the PID (Process) namespace mode for the container.
+    :type pid_mode: str
     """
     template_fields = ('command', 'environment', 'container_name')
     template_ext = ('.sh', '.bash',)
@@ -157,6 +159,7 @@ class DockerOperator(BaseOperator):
             auto_remove: bool = False,
             shm_size: Optional[int] = None,
             tty: Optional[bool] = False,
+            pid_mode: Optional[str] = None,
             *args,
             **kwargs) -> None:
 
@@ -188,6 +191,7 @@ class DockerOperator(BaseOperator):
         self.docker_conn_id = docker_conn_id
         self.shm_size = shm_size
         self.tty = tty
+        self.pid_mode = pid_mode
         if kwargs.get('xcom_push') is not None:
             raise AirflowException("'xcom_push' was deprecated, use 'BaseOperator.do_xcom_push' instead")
 
@@ -228,7 +232,8 @@ class DockerOperator(BaseOperator):
                     dns=self.dns,
                     dns_search=self.dns_search,
                     cpu_shares=int(round(self.cpus * 1024)),
-                    mem_limit=self.mem_limit),
+                    mem_limit=self.mem_limit,
+                    pid_mode=self.pid_mode),
                 image=self.image,
                 user=self.user,
                 working_dir=self.working_dir,
